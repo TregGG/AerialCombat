@@ -16,6 +16,7 @@ AAAircraftBase::AAAircraftBase()
 void AAAircraftBase::Steer(FVector2D StickInput)
 {
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
+	//Edit and add restriction on max roll allowed
 	FRotator DeltaRotator = FRotator(StickInput.Y*DeltaTime*BuildStats.PitchRate, 0.0f , -StickInput.X*DeltaTime*BuildStats.RollRate);
 	AddActorLocalRotation(DeltaRotator);
 }
@@ -32,7 +33,7 @@ void AAAircraftBase::Move(float ThrustLeverValue, float DeltaTime)
 	// We do Yaw through HORIZONTAL LIFT COMPONENT CALCULATIONS!
 	float LiftCoffecient = BuildStats.Maneuverability*CurrentSpeedSquared;
 	float LiftForceMagnitude= FMath::Sin(FMath::DegreesToRadians(GetActorRotation().Roll));
-	FVector CentrifugalForceDirection = FVector::CrossProduct(GetActorUpVector(),GetActorUpVector());
+	FVector CentrifugalForceDirection = FVector::CrossProduct(GetActorUpVector(),AirCraftVelocity).GetSafeNormal();
 	AirCraftVelocity+=LiftCoffecient*LiftForceMagnitude*CentrifugalForceDirection;
 }
 

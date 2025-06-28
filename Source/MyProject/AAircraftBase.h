@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "AircraftMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+
 #include "AAircraftBase.generated.h"
 
 USTRUCT(BlueprintType)
@@ -28,7 +32,13 @@ struct MYPROJECT_API FAircraftBuild
 	float PitchRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RollRate;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MinSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	float CameraBoomLength;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ThrustInput;
+	*/
 };
 
 USTRUCT(BlueprintType)
@@ -53,19 +63,41 @@ class MYPROJECT_API AAAircraftBase : public APawn
 public:
 	// Sets default values for this pawn's properties
 	AAAircraftBase();
-
+	float CurrentSpeed;
+	float CurrentYawSpeed;
+	float currentRollSpeed;
+	float CurrentPitchSpeed;
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite, Category= Camera, meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FollowCamera;
+	float TargetRollSpeed;
+	float TargetPitchSpeed;
+	FRotator DesiredAngularVelocity;
+
+
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FAircraftBuild BuildStats;
 	FEnvironmentalAirflow EnvAirflow;
 	FVector AirCraftVelocity;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aircraft State")
+	FRotator AirCraftAngularVelocity;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Input")
+	FVector2D SteerInput;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Input")
+	float ThrustInput; // IMPORTANT :- BASE Value -> 1.5, Full throttle forward Value -> 2.5, Full rev Value->0.5
 	void Steer(FVector2D Direction);
-	void Move(float ThrustLeverValue, float DeltaTime);
+	void processRoll(float Value);
+	void processPitch(float Value);
+	//void Move(float ThrustLeverValue, float DeltaTime);
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aircraft Movement")
+	UAircraftMovementComponent* AircraftMovementComp;
 	
 public:	
 	// Called every frame

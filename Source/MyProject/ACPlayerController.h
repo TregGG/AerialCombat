@@ -34,6 +34,7 @@ protected:
 	void HandleSteerInput(const FInputActionValue& InputActionValue);
 	void HandleThrustInput(const FInputActionValue& InputActionValue);
 	void HandleSteerInputCompleted(const FInputActionValue& Value);
+	void HandleThrustInputCompleted(const FInputActionValue& Value);
 
 public :
 	virtual void SetupInputComponent() override;

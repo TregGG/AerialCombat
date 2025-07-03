@@ -34,6 +34,17 @@ struct MYPROJECT_API FAircraftBuild
 	float RollRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MinSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WingSpan;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LiftCoefficient;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxAllowedGForce;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float EffectiveGravity;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//float ConstLiftForce;//lift force which applies all the time, irrespective of the AOA
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	float CameraBoomLength;
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -78,6 +89,7 @@ protected:
 	float TargetRollSpeed;
 	float TargetPitchSpeed;
 	FRotator DesiredAngularVelocity;
+	FVector CurrentVelocity;
 
 
 

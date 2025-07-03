@@ -82,8 +82,8 @@ void AAAircraftBase::BeginPlay()
 void AAAircraftBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    currentRollSpeed = FMath::FInterpTo(currentRollSpeed, TargetRollSpeed, GetWorld()->GetDeltaSeconds(), 4.0f);
-    CurrentPitchSpeed = FMath::FInterpTo(CurrentPitchSpeed, TargetPitchSpeed, GetWorld()->GetDeltaSeconds(), 4.0f);
+    currentRollSpeed = FMath::FInterpTo(currentRollSpeed, TargetRollSpeed, GetWorld()->GetDeltaSeconds(), 1.0f);
+    CurrentPitchSpeed = FMath::FInterpTo(CurrentPitchSpeed, TargetPitchSpeed, GetWorld()->GetDeltaSeconds(), 1.0f);
     FRotator currentRotation = GetActorRotation();
     float RollAngleRadians = FMath::DegreesToRadians(currentRotation.Roll);
     //float RollAngleRadians = (currentRotation.Roll);
@@ -92,21 +92,51 @@ void AAAircraftBase::Tick(float DeltaTime)
     //DesiredAngularVelocity.Pitch = CurrentPitchSpeed;
     DesiredAngularVelocity.Roll = currentRollSpeed;
 
-    if (AircraftMovementComp) {
-        AircraftMovementComp->SetAngularVelocity(DesiredAngularVelocity);
-    }
     FVector CurrentForwardVector = GetActorForwardVector(); 
+    //UE_LOG(LogTemp, Log, TEXT("currentForwardVector: %s"), *CurrentForwardVector.ToString());
 
     //// Linear Velocity Calculations
+    //UE_LOG(LogTemp, Log, TEXT("currentVelocity: %s"), *CurrentVelocity.ToString());
+
+    float AngleOfAttackRad = FMath::Acos(FVector::DotProduct(CurrentForwardVector, CurrentVelocity.GetSafeNormal()));
+    float Sign = FVector::DotProduct(CurrentVelocity,GetActorUpVector()) < 0 ? 1.0f : -1.0f;//sign of AOA
+    AngleOfAttackRad *= Sign;
+
+    UE_LOG(LogTemp, Log, TEXT("AngleOfAttack: %f"), AngleOfAttackRad);
+
+
+    //Gravity
+    FVector GravityForce = FVector(0, 0, -1) * BuildStats.EffectiveGravity*BuildStats.Mass;
+    //appling Lift
+    float LiftForceAgaisntGravity = GravityForce.Size();
+    float RealLiftCoeff = BuildStats.LiftCoefficient * FMath::Sin(2 * AngleOfAttackRad) * BuildStats.WingSpan;
+    FVector LiftForce = (0.5f * CurrentVelocity.SizeSquared() * RealLiftCoeff+LiftForceAgaisntGravity) * (FVector::CrossProduct(CurrentVelocity.GetSafeNormal(), FVector::CrossProduct(GetActorUpVector(), CurrentVelocity.GetSafeNormal())));//Applies One Lift Constantly
+    UE_LOG(LogTemp, Log, TEXT("LiftForce: %s"), *LiftForce.ToString());
+
+    //Appling Drag
+    float RealDragCoeff = FMath::Abs(BuildStats.DragCoefficient * (FMath::Sin(AngleOfAttackRad * BuildStats.WingSpan) + 1 ));
+    FVector DragForce = 0.5f * CurrentVelocity.SizeSquared() * RealDragCoeff * (-CurrentVelocity.GetSafeNormal());
+    //UE_LOG(LogTemp, Log, TEXT("DragForce: %s"), *DragForce.ToString());
+
     FVector ThrustForce = CurrentForwardVector * (ThrustInput * BuildStats.ThrustPower); //Thrust Input-> Acc. level value E[0.5,2.5]
+    //UE_LOG(LogTemp, Log, TEXT("ThrustForce: %s"), *ThrustForce.ToString());
 
-    FVector DragForce = FVector::ZeroVector; // DRAG
-    float CurrentSpeedSquared = AirCraftVelocity.SizeSquared();
-    float DragMagnitude = BuildStats.DragCoefficient * CurrentSpeedSquared; 
-    DragForce = -AirCraftVelocity.GetSafeNormal() * DragMagnitude; 
-    //
+    //Calculating G-Force
+    float MaxGForce = (FVector::CrossProduct(FVector(FMath::Cos(RollAngleRadians) * BuildStats.PitchRate, FMath::Sin(RollAngleRadians) * BuildStats.PitchRate, BuildStats.RollRate), AirCraftVelocity).Size());//GForce Calculation
+    if (MaxGForce >= BuildStats.MaxAllowedGForce) {
+        DesiredAngularVelocity *= BuildStats.MaxAllowedGForce / MaxGForce;//Relative scaling of the input so it feels more REAL
+        //UE_LOG(LogTemp, Log, TEXT("GMAXFORCEs: %f"), MaxGForce);
 
-    FVector TotalLinearForce = ThrustForce + DragForce; 
+    }
+
+
+    //FVector DragForce = FVector::ZeroVector; // DRAG
+    //float CurrentSpeedSquared = AirCraftVelocity.SizeSquared();
+    //float DragMagnitude = BuildStats.DragCoefficient * CurrentSpeedSquared; 
+    //DragForce = -AirCraftVelocity.GetSafeNormal() * DragMagnitude; 
+    ////
+
+    FVector TotalLinearForce = ThrustForce + DragForce+LiftForce+GravityForce; 
     TotalLinearForce += EnvAirflow.WindDirection * EnvAirflow.WindForce; // Apply wind force
     TotalLinearForce += EnvAirflow.UpdraftForce * GetActorUpVector(); //  Apply updraft force
     TotalLinearForce += EnvAirflow.TurbulenceStrength * FMath::VRand() * BuildStats.Unstability; // TURBULENCE
@@ -137,17 +167,22 @@ void AAAircraftBase::Tick(float DeltaTime)
     ////DesiredAngularVelocityPerSecond.Roll = SteerInput.X * BuildStats.RollRate;
 
     ////AirCraftAngularVelocity = DesiredAngularVelocityPerSecond;
-
-        if (AircraftMovementComp)
+    if (!AirCraftVelocity.IsNearlyZero())
+    {
+        FRotator TargetRot = AirCraftVelocity.ToOrientationRotator();
+        CameraBoom->SetWorldRotation(TargetRot);
+    }
+     if (AircraftMovementComp)
         {
     //        AircraftMovementComp->SetAngularVelocity(AirCraftAngularVelocity);
-
+         CurrentVelocity = AirCraftVelocity;
+            AircraftMovementComp->SetAngularVelocity(DesiredAngularVelocity);
             AircraftMovementComp->SetLinearVelocity(AirCraftVelocity);
             //UE_LOG(LogTemp, Log, TEXT("Updating The Velocity"));
             //UE_LOG(LogTemp, Log, TEXT("currentForwardVector: %s"), *CurrentForwardVector.ToString());
 
         }
-        else {
+     else {
             UE_LOG(LogTemp, Warning, TEXT("not able to get AircraftMovemnentComp"));
 
         }

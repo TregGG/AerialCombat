@@ -64,7 +64,7 @@ void UAircraftMovementComponent::SetLinearVelocity(FVector NewVelocity)
 {
 	CurrentLinearVelocity = NewVelocity;
 	// Optional: Log the new velocity for debugging
-	 UE_LOG(LogTemp, Log, TEXT("SetLinearVelocity: %s"), *NewVelocity.ToString());
+	 //UE_LOG(LogTemp, Log, TEXT("SetLinearVelocity: %s"), *NewVelocity.ToString());
 }
 
 

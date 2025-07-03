@@ -78,6 +78,8 @@ void AACPlayerController::SetupInputComponent() {
         }
         if (InputAircraftThrust) {
             EnhancedInputComponent->BindAction(InputAircraftThrust, ETriggerEvent::Triggered, this, &AACPlayerController::HandleThrustInput);
+            EnhancedInputComponent->BindAction(InputAircraftSteer, ETriggerEvent::Completed, this, &AACPlayerController::HandleThrustInputCompleted);
+
         }
         else {
             UE_LOG(LogTemp, Error, TEXT("Unable to get InputAircraftThrust"))
@@ -114,3 +116,11 @@ void AACPlayerController::HandleThrustInput(const FInputActionValue& Value) {
 
     }
 }
+void AACPlayerController::HandleThrustInputCompleted(const FInputActionValue& Value) {
+    if (AAAircraftBase* AircraftPawn = Cast<AAAircraftBase>(GetPawn())) {
+        //float ThrustValue = Value.Get<float>();
+        AircraftPawn->ThrustInput = 0.0f;
+
+    }
+}
+

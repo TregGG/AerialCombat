@@ -27,7 +27,9 @@ struct MYPROJECT_API FAircraftBuild
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Mass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DragCoefficient;
+	float DragCoefficientAOAMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DragCoefficientBase;//For Drag Force for zero AOA
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PitchRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -37,14 +39,14 @@ struct MYPROJECT_API FAircraftBuild
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WingSpan;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float LiftCoefficient;
+	float LiftCoefficientAOAMultiplier;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxAllowedGForce;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float EffectiveGravity;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//float ConstLiftForce;//lift force which applies all the time, irrespective of the AOA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LiftCoefficientBase;//For lift force for Zero AOA
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	float CameraBoomLength;
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -88,7 +90,6 @@ protected:
 	UCameraComponent* FollowCamera;
 	float TargetRollSpeed;
 	float TargetPitchSpeed;
-	FRotator DesiredAngularVelocity;
 	FVector CurrentVelocity;
 
 
@@ -104,7 +105,6 @@ public:
 	FVector2D SteerInput;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Input")
 	float ThrustInput; // IMPORTANT :- BASE Value -> 1.5, Full throttle forward Value -> 2.5, Full rev Value->0.5
-	void Steer(FVector2D Direction);
 	void processRoll(float Value);
 	void processPitch(float Value);
 	//void Move(float ThrustLeverValue, float DeltaTime);

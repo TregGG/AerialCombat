@@ -24,7 +24,11 @@ protected:
 	FVector CurrentLinearVelocity;
 
 	UPROPERTY(Transient)
-	FRotator CurrentAngularVelocity;
+	FQuat CurrentActorDirection;
+
+	UPROPERTY(Transient)
+	FVector CurrentAngularVelocity; // X: Pitch, Y: Yaw, Z: Roll in degrees/sec
+
 
 	FRotator DeltaRotation;
 
@@ -37,6 +41,6 @@ public:
 	void SetLinearVelocity(FVector NewVelocity);
 
 	UFUNCTION(BlueprintCallable, Category = "Aircraft Movement")
-	void SetAngularVelocity(FRotator NewAngularVelocity);
+	void SetAngularVelocity(FVector NewAngularVelocity,FQuat NewActorDirection);
 
 };

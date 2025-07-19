@@ -93,6 +93,9 @@ void AAAircraftBase::Tick(float DeltaTime)
     ////Making Angular velocity also dependent on the AOA
     LocalAngularVelocity *= FMath::Cos(AngleOfAttackRad);
 
+
+    float EffectiveAOAMultiplier = 1.0f;
+    //stalling
     if (AngleOfAttackRad >= FMath::DegreesToRadians(BuildStats.StallAngleDegrees)) {
         //torque that makes the plane return to the direction of velocity
         FQuat CurrentQuat = GetActorQuat();
@@ -109,12 +112,16 @@ void AAAircraftBase::Tick(float DeltaTime)
 
         // Calculate returning angular velocity/torque
         FVector StallReturningTorque = Axis * AngleRad * BuildStats.ReturningTorque;
-        UE_LOG(LogTemp, Log, TEXT("ReturningTorque: %s"), *StallReturningTorque.ToString());
-
+        //UE_LOG(LogTemp, Log, TEXT("ReturningTorque: %s"), *StallReturningTorque.ToString());
+        EffectiveAOAMultiplier = BuildStats.StallAOAThrustMultiplier;
         ////Assuming that the inertia and the mass of the craft is same
         LocalAngularVelocity += StallReturningTorque / BuildStats.Mass;
     }
     
+    
+
+
+    //Velocity Calculations
     
 
 
@@ -132,8 +139,7 @@ void AAAircraftBase::Tick(float DeltaTime)
     }
     else
     {
-        FVector VelocityNormal = VelocityDir;
-        LiftDirection = GetActorUpVector() - (GetActorUpVector().Dot(VelocityNormal)) * VelocityNormal;
+        LiftDirection = GetActorUpVector() - (GetActorUpVector().Dot(VelocityDir)) * VelocityDir;
         LiftDirection.Normalize(); // Normalize to ensure it's a unit vector
     }
 
@@ -145,8 +151,11 @@ void AAAircraftBase::Tick(float DeltaTime)
     float RealDragCoeff = FMath::Abs(BuildStats.DragCoefficientAOAMultiplier * (FMath::Sin(AngleOfAttackRad * BuildStats.WingSpan)))+BuildStats.DragCoefficientBase;
     FVector DragForce = 0.5f * CurrentVelocity.SizeSquared() * RealDragCoeff * (-VelocityDir);
     //UE_LOG(LogTemp, Log, TEXT("DragForce: %s"), *DragForce.ToString());
+    //EffectiveAOA
+    EffectiveAOAMultiplier *= FMath::Cos(AngleOfAttackRad);
+    UE_LOG(LogTemp, Log, TEXT("EffectiveAOAMultiplier: %f"), EffectiveAOAMultiplier);
 
-    FVector ThrustForce = CurrentForwardVector * (ThrustInput * BuildStats.ThrustPower); //Thrust Input-> Acc. level value E[0.5,2.5]
+    FVector ThrustForce = CurrentForwardVector * (ThrustInput * BuildStats.ThrustPower+ CurrentVelocity.Size()*BuildStats.ThrustVelocityMultiplier*EffectiveAOAMultiplier); //Thrust Input-> Acc. level value E[0.5,2.5]
     //UE_LOG(LogTemp, Log, TEXT("ThrustForce: %s"), *ThrustForce.ToString());
 
     

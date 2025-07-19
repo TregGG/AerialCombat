@@ -37,6 +37,8 @@ struct MYPROJECT_API FAircraftBuild
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MinSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StallAngleDegrees=45;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WingSpan;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LiftCoefficientAOAMultiplier;
@@ -44,7 +46,8 @@ struct MYPROJECT_API FAircraftBuild
 	float MaxAllowedGForce;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float EffectiveGravity;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ReturningTorque; // for making aircraft face the velocity direction
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LiftCoefficientBase;//For lift force for Zero AOA
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)

@@ -25,6 +25,10 @@ struct MYPROJECT_API FAircraftBuild
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ThrustPower;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ThrustVelocityMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StallAOAThrustMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Mass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DragCoefficientAOAMultiplier;

@@ -153,7 +153,7 @@ void AAAircraftBase::Tick(float DeltaTime)
     //UE_LOG(LogTemp, Log, TEXT("DragForce: %s"), *DragForce.ToString());
     //EffectiveAOA
     EffectiveAOAMultiplier *= FMath::Cos(AngleOfAttackRad);
-    UE_LOG(LogTemp, Log, TEXT("EffectiveAOAMultiplier: %f"), EffectiveAOAMultiplier);
+    //UE_LOG(LogTemp, Log, TEXT("EffectiveAOAMultiplier: %f"), EffectiveAOAMultiplier);
 
     FVector ThrustForce = CurrentForwardVector * (ThrustInput * BuildStats.ThrustPower+ CurrentVelocity.Size()*BuildStats.ThrustVelocityMultiplier*EffectiveAOAMultiplier); //Thrust Input-> Acc. level value E[0.5,2.5]
     //UE_LOG(LogTemp, Log, TEXT("ThrustForce: %s"), *ThrustForce.ToString());

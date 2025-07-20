@@ -12,6 +12,7 @@ UAircraftMovementComponent::UAircraftMovementComponent()
 	CurrentLinearVelocity = FVector::ZeroVector;
 	CurrentAngularVelocity = FVector::ZeroVector;
 	DeltaRotation = FRotator::ZeroRotator;
+	SetAngularVelocityMode = false;
 };
 
 
@@ -52,8 +53,11 @@ void UAircraftMovementComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	DeltaRotation.Pitch = CurrentAngularVelocity.X * DeltaTime;
 	DeltaRotation.Yaw = CurrentAngularVelocity.Y * DeltaTime;
 	DeltaRotation.Roll = CurrentAngularVelocity.Z * DeltaTime;
+	FQuat DeltaRotationQuat = DeltaRotation.Quaternion();
+	if (SetAngularVelocityMode) {
+		DeltaRotationQuat = CurrentActorDirection * DeltaRotation.Quaternion();
 
-	FQuat DeltaRotationQuat = CurrentActorDirection*DeltaRotation.Quaternion()  ;
+	}
 
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(DeltaLocation, DeltaRotationQuat, true, Hit);
@@ -75,8 +79,15 @@ void UAircraftMovementComponent::SetLinearVelocity(FVector NewVelocity)
 
 void UAircraftMovementComponent::SetAngularVelocity(FVector NewAngularVelocity,FQuat NewActorDirection)// Takes vector NOT ROTATOR
 {
+	SetAngularVelocityMode = true;
 	CurrentAngularVelocity = NewAngularVelocity;
 	CurrentActorDirection = NewActorDirection;
 	//UE_LOG(LogTemp, Log, TEXT("SetAngularVelocity: %s"), *NewAngularVelocity.ToString());
 
+}
+
+void UAircraftMovementComponent::SetAngularRotaion(FVector NewAngularVelocity)
+{
+	SetAngularVelocityMode = false;
+	CurrentAngularVelocity = NewAngularVelocity;
 }

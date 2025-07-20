@@ -39,6 +39,8 @@ struct MYPROJECT_API FAircraftBuild
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RollRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float YawRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MinSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StallAngleDegrees=45;
@@ -97,6 +99,7 @@ protected:
 	UCameraComponent* FollowCamera;
 	float TargetRollSpeed;
 	float TargetPitchSpeed;
+	float TargetYawSpeed;
 	FVector CurrentVelocity;
 
 
@@ -114,6 +117,7 @@ public:
 	float ThrustInput; // IMPORTANT :- BASE Value -> 1.5, Full throttle forward Value -> 2.5, Full rev Value->0.5
 	void processRoll(float Value);
 	void processPitch(float Value);
+	void processYaw(float Value);
 	//void Move(float ThrustLeverValue, float DeltaTime);
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aircraft Movement")
 	UAircraftMovementComponent* AircraftMovementComp;

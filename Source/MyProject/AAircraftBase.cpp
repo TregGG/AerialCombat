@@ -43,6 +43,11 @@ void AAAircraftBase::processPitch(float Value)
     TargetPitchSpeed = Value * BuildStats.PitchRate;
 }
 
+void AAAircraftBase::processYaw(float Value)
+{
+    TargetYawSpeed = Value * BuildStats.YawRate;
+}
+
 
 
 // Called when the game starts or when spawned
@@ -148,7 +153,7 @@ void AAAircraftBase::Tick(float DeltaTime)
     //UE_LOG(LogTemp, Log, TEXT("LiftForce: %s"), *LiftForce.ToString());
 
     //Appling Drag
-    float RealDragCoeff = FMath::Abs(BuildStats.DragCoefficientAOAMultiplier * (FMath::Sin(AngleOfAttackRad * BuildStats.WingSpan)))+BuildStats.DragCoefficientBase;
+    float RealDragCoeff = FMath::Abs(BuildStats.DragCoefficientAOAMultiplier * (FMath::Sin(AngleOfAttackRad) * BuildStats.WingSpan))+BuildStats.DragCoefficientBase;
     FVector DragForce = 0.5f * CurrentVelocity.SizeSquared() * RealDragCoeff * (-VelocityDir);
     //UE_LOG(LogTemp, Log, TEXT("DragForce: %s"), *DragForce.ToString());
     //EffectiveAOA

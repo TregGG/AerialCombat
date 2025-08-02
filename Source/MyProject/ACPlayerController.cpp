@@ -78,7 +78,7 @@ void AACPlayerController::SetupInputComponent() {
         }
         if (InputAircraftThrust) {
             EnhancedInputComponent->BindAction(InputAircraftThrust, ETriggerEvent::Triggered, this, &AACPlayerController::HandleThrustInput);
-            EnhancedInputComponent->BindAction(InputAircraftSteer, ETriggerEvent::Completed, this, &AACPlayerController::HandleThrustInputCompleted);
+            EnhancedInputComponent->BindAction(InputAircraftThrust, ETriggerEvent::Completed, this, &AACPlayerController::HandleThrustInputCompleted);
 
         }
         else {

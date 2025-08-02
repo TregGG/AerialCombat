@@ -121,6 +121,7 @@ public:
 	//void Move(float ThrustLeverValue, float DeltaTime);
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aircraft Movement")
 	UAircraftMovementComponent* AircraftMovementComp;
+
 	
 public:	
 	// Called every frame

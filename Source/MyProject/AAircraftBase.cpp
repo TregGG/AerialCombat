@@ -1,8 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AAircraftBase.h"
-#include "GameFramework/Pawn.h"
+#include "ACPlayerState.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/Pawn.h"
+#include "AbilitySystemComponent.h"
+#include "Abilities/GameplayAbility.h"
+#include "AbilityComponent.h"
 
 // Sets default values
 AAAircraftBase::AAAircraftBase()
@@ -17,10 +21,32 @@ AAAircraftBase::AAAircraftBase()
 
     // Now, attach other components to this RootCollision component
     AircraftMovementComp = CreateDefaultSubobject<UAircraftMovementComponent>(TEXT("AircraftMovementComponent"));
+    
+    // Initialize default values for BuildStats
+    BuildStats.Speed = 80.0f;
+    BuildStats.RollRate = 90.0f;
+    BuildStats.PitchRate = 90.0f;
+    BuildStats.YawRate = 45.0f;
+    BuildStats.ThrustPower = 1000.0f;
+    BuildStats.ThrustVelocityMultiplier = 0.1f;
+    BuildStats.StallAOAThrustMultiplier = 0.5f;
+    BuildStats.Mass = 1000.0f;
+    BuildStats.DragCoefficientAOAMultiplier = 0.1f;
+    BuildStats.DragCoefficientBase = 0.01f;
+    BuildStats.MinSpeed = 10.0f;
+    BuildStats.StallAngleDegrees = 45.0f;
+    BuildStats.WingSpan = 10.0f;
+    BuildStats.LiftCoefficientAOAMultiplier = 0.1f;
+    BuildStats.MaxAllowedGForce = 9.0f;
+    BuildStats.EffectiveGravity = 980.0f;
+    BuildStats.ReturningTorque = 100.0f;
+    BuildStats.LiftCoefficientBase = 0.1f;
+    BuildStats.CameraBoomLength = 1000.0f;
+    
 	AirCraftVelocity=GetActorForwardVector()*BuildStats.Speed;
     AirCraftAngularVelocity = FRotator::ZeroRotator; 
     SteerInput = FVector2D::ZeroVector;
-    ThrustInput = 0.0f; 
+    ThrustInput = 1.5f; // Set to base value (1.5) instead of 0.0f 
     //CAM SETTINGS
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(GetRootComponent());
@@ -29,18 +55,118 @@ AAAircraftBase::AAAircraftBase()
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
     FollowCamera->bUsePawnControlRotation = false;
+    //ability
+    AbilityComponent = CreateDefaultSubobject<UAbilityComponent>(TEXT("AbilitySystemComponent"));
+    if (AbilityComponent)
+    {
+        AbilityComponent->SetIsReplicated(true);
+        UE_LOG(LogTemp, Log, TEXT("AAAircraftBase Constructor: AbilityComponent created successfully"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("AAAircraftBase Constructor: Failed to create AbilityComponent!"));
+    }
+    
+    // New Ability Manager System
+    AbilityManager = CreateDefaultSubobject<UAbilityManager>(TEXT("AbilityManager"));
+    if (AbilityManager)
+    {
+        UE_LOG(LogTemp, Log, TEXT("AAAircraftBase Constructor: AbilityManager created successfully"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("AAAircraftBase Constructor: Failed to create AbilityManager!"));
+    }
+    
+    // Initialize default values for the ability component
+    if (AbilityComponent)
+    {
+        //AbilityComponent->AbilityBarFill = 100.0f;
+        UE_LOG(LogTemp, Log, TEXT("AAAircraftBase Constructor: AbilityComponent initialized with default values"));
+    }
 }
 
 
 
+void AAAircraftBase::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+    UE_LOG(LogTemp, Log, TEXT("AAAircraftBase PossessedBy: Called"));
+}
+
+void AAAircraftBase::InitAbilitySystemComponent()
+{
+    UE_LOG(LogTemp, Log, TEXT("InitAbilitySystemComponent: Starting initialization..."));
+    
+    if (!AbilityComponent)
+    {
+        UE_LOG(LogTemp, Error, TEXT("InitAbilitySystemComponent: AbilityComponent is nullptr!"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("InitAbilitySystemComponent: AbilityComponent is valid"));
+
+    AACPlayerState* ACPlayerState = GetPlayerState<AACPlayerState>();
+    if (!ACPlayerState)
+    {
+        UE_LOG(LogTemp, Error, TEXT("InitAbilitySystemComponent: PlayerState is nullptr!"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("InitAbilitySystemComponent: PlayerState is valid"));
+
+    // Initialize the ability system component with the player state and this actor
+    AbilityComponent->InitAbilityActorInfo(ACPlayerState, this);
+
+    UE_LOG(LogTemp, Log, TEXT("InitAbilitySystemComponent: Initialized ASC!"));
+}
+
+void AAAircraftBase::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+    InitAbilitySystemComponent();
+
+}
+
+void AAAircraftBase::GiveDefaultAbilities()
+{
+    if (!AbilityComponent)
+    {
+        UE_LOG(LogTemp, Error, TEXT("GiveDefaultAbilities: AbilityComponent is nullptr!"));
+        return;
+    }
+
+    if (!HasAuthority()) 
+    {
+        UE_LOG(LogTemp, Warning, TEXT("GiveDefaultAbilities: Not on authority, skipping ability granting"));
+        return;
+    }
+
+    for (TSubclassOf<UGameplayAbility> AbilityClass : DefaultAbilities) 
+    {
+        if (AbilityClass)
+        {
+            const FGameplayAbilitySpec AbilitySpec(AbilityClass, 1);
+            AbilityComponent->GiveAbility(AbilitySpec);
+            UE_LOG(LogTemp, Log, TEXT("GiveDefaultAbilities: Granted ability %s"), *AbilityClass->GetName());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("GiveDefaultAbilities: Invalid ability class in DefaultAbilities array"));
+        }
+    }
+}
+
 void AAAircraftBase::processRoll(float Value)
 {
     TargetRollSpeed = Value * BuildStats.RollRate;
+    UE_LOG(LogTemp, Log, TEXT("processRoll: Value = %f, TargetRollSpeed = %f"), Value, TargetRollSpeed);
 }
 
 void AAAircraftBase::processPitch(float Value)
 {
     TargetPitchSpeed = Value * BuildStats.PitchRate;
+    UE_LOG(LogTemp, Log, TEXT("processPitch: Value = %f, TargetPitchSpeed = %f"), Value, TargetPitchSpeed);
 }
 
 void AAAircraftBase::processYaw(float Value)
@@ -56,6 +182,40 @@ void AAAircraftBase::BeginPlay()
 	Super::BeginPlay();
     CameraBoom->TargetArmLength = BuildStats.CameraBoomLength;
 
+    // Ensure the ability component is properly initialized
+    if (AbilityComponent)
+    {
+        UE_LOG(LogTemp, Log, TEXT("BeginPlay: AbilityComponent is valid"));
+        
+        // Initialize the ability system component
+        InitAbilitySystemComponent();
+        GiveDefaultAbilities();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("BeginPlay: AbilityComponent is nullptr!"));
+    }
+    
+    // Initialize the new ability manager system
+    if (AbilityManager)
+    {
+        UE_LOG(LogTemp, Log, TEXT("BeginPlay: AbilityManager is valid"));
+        
+        // Set the default ability set if one is assigned
+        if (DefaultAbilitySet)
+        {
+            AbilityManager->SetAbilitySet(DefaultAbilitySet);
+            UE_LOG(LogTemp, Log, TEXT("BeginPlay: Set default ability set: %s"), *DefaultAbilitySet->SetName);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("BeginPlay: No default ability set assigned"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("BeginPlay: AbilityManager is nullptr!"));
+    }
 }
 
 // Called every frame
@@ -64,6 +224,16 @@ void AAAircraftBase::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
     currentRollSpeed = FMath::FInterpTo(currentRollSpeed, TargetRollSpeed, GetWorld()->GetDeltaSeconds(), 1.0f);
     CurrentPitchSpeed = FMath::FInterpTo(CurrentPitchSpeed, TargetPitchSpeed, GetWorld()->GetDeltaSeconds(), 1.0f);
+    
+    // Debug logging for movement
+    static float DebugTimer = 0.0f;
+    DebugTimer += DeltaTime;
+    if (DebugTimer >= 1.0f) // Log every second
+    {
+        DebugTimer = 0.0f;
+        UE_LOG(LogTemp, Log, TEXT("Aircraft Tick: ThrustInput=%f, AirCraftVelocity=%s, Position=%s"), 
+            ThrustInput, *AirCraftVelocity.ToString(), *GetActorLocation().ToString());
+    }
     FRotator currentRotation = GetActorRotation();
     FVector VelocityDir = CurrentVelocity.GetSafeNormal();
     float RollAngleRadians = FMath::DegreesToRadians(currentRotation.Roll);
@@ -220,5 +390,10 @@ void AAAircraftBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
   Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+UAbilitySystemComponent* AAAircraftBase::GetAbilitySystemComponent() const
+{
+    return AbilityComponent;
 }
 

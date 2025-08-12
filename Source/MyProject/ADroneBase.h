@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AAircraftBase.h"
+#include "AbilitySystemInterface.h"
 //#include "Public/AbilityComponent.h"
 
 #include "ADroneBase.generated.h"
@@ -83,11 +84,12 @@ public:
 	UStaticMeshComponent* DroneVisualMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	FRotator DroneMeshOffestRotation;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DroneAbility Main")
-	//TSubclassOf<UAbilityComponent> AbilityComponentClass;
+	
+	// Ability System inherited from AAircraftBase
+	// UAbilityManager* AbilityManager; // Inherited from AAircraftBase
+	// UAbilitySetDataAsset* DefaultAbilitySet; // Inherited from AAircraftBase
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DroneAbility Main")
-	TIsTObjectPtr<UAbilityComponent> AbilityComponent;
+
 
 
 	FRotator CamRotation;
@@ -96,6 +98,9 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void OnRep_PlayerState() override;
 	void CameraInput(FVector2D Input);
 	void SteerInputHandler(FVector2D Input);
+	void InitAbilitySystemComponent();
+
 };

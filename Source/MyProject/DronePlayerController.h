@@ -10,6 +10,7 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 class AADroneBase;
+class UAbilityManager;
 /**
  * 
  */

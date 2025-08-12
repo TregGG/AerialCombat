@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "ADroneBase.h"
+#include "AbilityManager.h"
 
 ADronePlayerController::ADronePlayerController()
 {
@@ -65,9 +66,15 @@ void ADronePlayerController::OnPossess(APawn* InPawn)
 
 void ADronePlayerController::HandleMoveInput(const FInputActionValue& InputActionValue)
 {
+    UE_LOG(LogTemp, Log, TEXT("HandleMoveInput: Called"));
     if (AADroneBase* DronePawn = Cast<AADroneBase>(GetPawn())) {
         FVector2D SteerVector = InputActionValue.Get<FVector2D>();
         DronePawn->SteerInputHandler(SteerVector);
+        UE_LOG(LogTemp, Log, TEXT("HandleMoveInput: SteerVector = %s"), *SteerVector.ToString());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("HandleMoveInput: No valid drone pawn!"));
     }
 }
 
@@ -81,10 +88,15 @@ void ADronePlayerController::HandleMoveInputCompleted(const FInputActionValue& V
 
 void ADronePlayerController::HandleCameraRotation(const FInputActionValue& InputActionValue)
 {
+    UE_LOG(LogTemp, Log, TEXT("HandleCameraRotation: Called"));
     if (AADroneBase* DronePawn = Cast<AADroneBase>(GetPawn())) {
         FVector2D RotationVector = InputActionValue.Get<FVector2D>();
         DronePawn->CameraInput(RotationVector);
-        //UE_LOG(LogTemp, Log, TEXT("Applying RotationVector : %s"), *RotationVector.ToString());
+        UE_LOG(LogTemp, Log, TEXT("HandleCameraRotation: RotationVector = %s"), *RotationVector.ToString());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("HandleCameraRotation: No valid drone pawn!"));
     }
 }
 
@@ -99,8 +111,16 @@ void ADronePlayerController::HandleCameraRotationCompleted(const FInputActionVal
 void ADronePlayerController::HandleShootInput(const FInputActionValue& InputActionValue)
 {
     if (InputActionValue.Get<bool>()) {
-        if (AADroneBase* DronePawn = Cast < AADroneBase>(GetPawn())) {
-            DronePawn->AbilityComponent->OnShoot();
+        if (AADroneBase* DronePawn = Cast<AADroneBase>(GetPawn())) {
+            if (DronePawn->AbilityManager)
+            {
+                DronePawn->AbilityManager->UseShoot();
+                UE_LOG(LogTemp, Log, TEXT("HandleShootInput: Called shoot ability via GAS"));
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("HandleShootInput: AbilityManager is nullptr!"));
+            }
         }
     }
 }
@@ -123,7 +143,7 @@ void ADronePlayerController::SetupInputComponent()
 
         }
         if (InputShooting) {
-            EnchancedInputComponent->BindAction(InputShooting, ETriggerEvent::Triggered, this, &ADronePlayerController::HandleShootInput);
+            //EnchancedInputComponent->BindAction(InputShooting, ETriggerEvent::Triggered, this, &ADronePlayerController::HandleShootInput);
         }
     }
 }

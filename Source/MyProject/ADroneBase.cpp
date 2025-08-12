@@ -4,6 +4,7 @@
 #include "ADroneBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "./Public/DronePlayerState.h"
 #include "GameFramework/PlayerController.h"
 
 AADroneBase::AADroneBase()
@@ -16,26 +17,24 @@ AADroneBase::AADroneBase()
     DroneVisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DroneVisualMesh"));
     DroneVisualMesh->AddLocalRotation(DroneMeshOffestRotation);
     DroneVisualMesh->SetupAttachment(RootComponent);
-    AbilityComponent = CreateDefaultSubobject<UAbilityComponent>(TEXT("AbilityComponent"));
+    //AbilityComponent = CreateDefaultSubobject<UAbilityComponent>(TEXT("AbilityComponent"));
     
     //FirePoint
     FirePoint = CreateDefaultSubobject<USceneComponent>(TEXT("FirePoint"));
     FirePoint->SetupAttachment(RootComponent);
-  
+    
+    // Ability Manager is inherited from AAircraftBase
+    
+    UE_LOG(LogTemp, Log, TEXT("Drone Constructor: Called"));
 }
 
 void AADroneBase::BeginPlay()
 {
-    /*if (AbilityComponentClass) {
-        AbilityComponent = NewObject<UAbilityComponent>(this, AbilityComponentClass);
-        if (AbilityComponent) {
-            AbilityComponent->RegisterComponent();
-            AbilityComponent->OnComponentCreated();
-            AbilityComponent->InitializeComponent();
-            UE_LOG(LogTemp,Log, TEXT("AbilityComponent initialized !!"))
-        }
-    }*/
-
+    Super::BeginPlay();
+    UE_LOG(LogTemp, Log, TEXT("Drone BeginPlay: Called"));
+    
+    // Ability Manager is initialized by AAircraftBase::BeginPlay()
+    // No need to duplicate the setup here
 }
 
 void AADroneBase::Tick(float DeltaTime)
@@ -110,8 +109,23 @@ void AADroneBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void AADroneBase::CameraInput(FVector2D Input)
 {
     CameraInputStick = Input;
+    UE_LOG(LogTemp, Log, TEXT("Drone CameraInput: Input = %s"), *Input.ToString());
 }
 void AADroneBase::SteerInputHandler(FVector2D Input)
 {
     SteerInput = Input;
+    UE_LOG(LogTemp, Log, TEXT("Drone SteerInputHandler: Input = %s"), *Input.ToString());
+}
+
+void AADroneBase::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+    UE_LOG(LogTemp, Log, TEXT("Drone OnRep_PlayerState: Called"));
+    // Don't call InitAbilitySystemComponent() for drone
+}
+
+void AADroneBase::InitAbilitySystemComponent()
+{
+    // This function is now handled by UAbilityManager
+    UE_LOG(LogTemp, Log, TEXT("Drone InitAbilitySystemComponent: Now handled by UAbilityManager"));
 }

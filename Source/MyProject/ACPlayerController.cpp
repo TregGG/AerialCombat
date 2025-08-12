@@ -92,11 +92,16 @@ void AACPlayerController::SetupInputComponent() {
     }
 }
 void AACPlayerController::HandleSteerInput(const FInputActionValue& Value) {
+    UE_LOG(LogTemp, Log, TEXT("HandleSteerInput: Called"));
     if (AAAircraftBase* AircraftPawn = Cast<AAAircraftBase>(GetPawn())) {
         FVector2D SteerVector = Value.Get<FVector2D>();
         AircraftPawn->processPitch(SteerVector.Y);
         AircraftPawn->processRoll(SteerVector.X);
-
+        UE_LOG(LogTemp, Log, TEXT("HandleSteerInput: SteerVector = %s"), *SteerVector.ToString());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("HandleSteerInput: No valid aircraft pawn!"));
     }
 }
 void AACPlayerController::HandleSteerInputCompleted(const FInputActionValue& Value)
@@ -110,10 +115,15 @@ void AACPlayerController::HandleSteerInputCompleted(const FInputActionValue& Val
     }
 }
 void AACPlayerController::HandleThrustInput(const FInputActionValue& Value) {
+    UE_LOG(LogTemp, Log, TEXT("HandleThrustInput: Called"));
     if (AAAircraftBase* AircraftPawn = Cast<AAAircraftBase>(GetPawn())) {
         float ThrustValue = Value.Get<float>();
         AircraftPawn->ThrustInput = ThrustValue;
-
+        UE_LOG(LogTemp, Log, TEXT("HandleThrustInput: ThrustValue = %f"), ThrustValue);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("HandleThrustInput: No valid aircraft pawn!"));
     }
 }
 void AACPlayerController::HandleThrustInputCompleted(const FInputActionValue& Value) {

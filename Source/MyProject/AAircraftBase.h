@@ -7,6 +7,9 @@
 #include "AircraftMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include <AbilitySystemInterface.h>
+#include "Public/AbilityComponent.h"
+#include "Public/AbilityManager.h"
 
 #include "AAircraftBase.generated.h"
 
@@ -78,7 +81,7 @@ struct FEnvironmentalAirflow
 };
 
 UCLASS()
-class MYPROJECT_API AAAircraftBase : public APawn
+class MYPROJECT_API AAAircraftBase : public APawn,  public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -109,6 +112,25 @@ public:
 	FAircraftBuild BuildStats;
 	FEnvironmentalAirflow EnvAirflow;
 	FVector AirCraftVelocity;
+
+	//Abilities Using GAS
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ability System", meta = (AllowPrivateAccess = "true"))
+	UAbilityComponent* AbilityComponent;
+	
+	// New Ability Manager System
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ability System", meta = (AllowPrivateAccess = "true"))
+	UAbilityManager* AbilityManager;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability System")
+	UAbilitySetDataAsset* DefaultAbilitySet;
+	
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+	UPROPERTY(EditAnywhere, Category =  "Ability")
+	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
+	void GiveDefaultAbilities();
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aircraft State")
 	FRotator AirCraftAngularVelocity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Input")
@@ -122,6 +144,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aircraft Movement")
 	UAircraftMovementComponent* AircraftMovementComp;
 
+
+public:
+	void InitAbilitySystemComponent();
+	
 	
 public:	
 	// Called every frame
@@ -129,4 +155,5 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 };

@@ -60,8 +60,7 @@ void AACPlayerController::OnPossess(APawn* InPawn) {
 
             }
             else {
-                UE_LOG(LogTemp, Error, TEXT("Unable to get AircraftInputMappingContext"))
-
+                UE_LOG(LogTemp, Error, TEXT("Unable to get AircraftInputMappingContext"));
             }
         }
     }
@@ -74,7 +73,7 @@ void AACPlayerController::SetupInputComponent() {
             EnhancedInputComponent->BindAction(InputAircraftSteer, ETriggerEvent::Completed, this, &AACPlayerController::HandleSteerInputCompleted);
         }
         else {
-            UE_LOG(LogTemp, Error, TEXT("Unable to get InputAircraftsteer"))
+            UE_LOG(LogTemp, Error, TEXT("Unable to get InputAircraftSteer"));
         }
         if (InputAircraftThrust) {
             EnhancedInputComponent->BindAction(InputAircraftThrust, ETriggerEvent::Triggered, this, &AACPlayerController::HandleThrustInput);
@@ -82,13 +81,11 @@ void AACPlayerController::SetupInputComponent() {
 
         }
         else {
-            UE_LOG(LogTemp, Error, TEXT("Unable to get InputAircraftThrust"))
+            UE_LOG(LogTemp, Error, TEXT("Unable to get InputAircraftThrust"));
         }
-
     }
     else {
-        UE_LOG(LogTemp, Error, TEXT("Unable to get InputComponent from UEnhancedInputComponent"))
-
+        UE_LOG(LogTemp, Error, TEXT("Unable to get InputComponent from UEnhancedInputComponent"));
     }
 }
 void AACPlayerController::HandleSteerInput(const FInputActionValue& Value) {

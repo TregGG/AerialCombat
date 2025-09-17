@@ -26,12 +26,12 @@ void ADronePlayerController::BeginPlay()
 
                 // The '0' indicates the priority. Higher numbers mean higher priority.
                 Subsystem->AddMappingContext(DroneInputMappingContext, 0);
-                UE_LOG(LogTemp, Warning, TEXT("ADronePlayerController: AircraftInputMappingContext Assigned"));
+                UE_LOG(LogTemp, Warning, TEXT("ADronePlayerController: DroneInputMappingContext Assigned"));
             }
             else
             {
                 // Log a warning if the mapping context UPROPERTY was not assigned
-                UE_LOG(LogTemp, Warning, TEXT("ADronePlayerController: AircraftInputMappingContext not assigned! Input may not work. Please assign it in the Blueprint derived from ADronePlayerController."));
+                UE_LOG(LogTemp, Warning, TEXT("ADronePlayerController: DroneInputMappingContext not assigned! Input may not work. Please assign it in the Blueprint derived from ADronePlayerController."));
             }
         }
         else
@@ -134,16 +134,22 @@ void ADronePlayerController::SetupInputComponent()
             EnchancedInputComponent->BindAction(InputDroneMove, ETriggerEvent::Completed, this, &ADronePlayerController::HandleMoveInputCompleted);
         }
         else {
-            UE_LOG(LogTemp, Error, TEXT("Unable to get InputdroneMovement"));
+            UE_LOG(LogTemp, Error, TEXT("Unable to get InputDroneMove"));
         }
         if (InputCameraRotation) {
             EnchancedInputComponent->BindAction(InputCameraRotation, ETriggerEvent::Triggered, this, &ADronePlayerController::HandleCameraRotation);
-            EnchancedInputComponent->BindAction(InputCameraRotation, ETriggerEvent::Completed, this, &ADronePlayerController::HandleCameraRotation);
-            //UE_LOG(LogTemp, Error, TEXT("Was Able to get InputCameraRotation"));
-
+            EnchancedInputComponent->BindAction(InputCameraRotation, ETriggerEvent::Completed, this, &ADronePlayerController::HandleCameraRotationCompleted);
+            UE_LOG(LogTemp, Log, TEXT("Successfully bound InputCameraRotation"));
+        }
+        else {
+            UE_LOG(LogTemp, Error, TEXT("Unable to get InputCameraRotation"));
         }
         if (InputShooting) {
-            //EnchancedInputComponent->BindAction(InputShooting, ETriggerEvent::Triggered, this, &ADronePlayerController::HandleShootInput);
+            EnchancedInputComponent->BindAction(InputShooting, ETriggerEvent::Triggered, this, &ADronePlayerController::HandleShootInput);
+            UE_LOG(LogTemp, Log, TEXT("Successfully bound InputShooting"));
+        }
+        else {
+            UE_LOG(LogTemp, Error, TEXT("Unable to get InputShooting"));
         }
     }
 }

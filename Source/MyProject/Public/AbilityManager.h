@@ -48,7 +48,7 @@ struct MYPROJECT_API FAbilityData
  */
 UCLASS(BlueprintType)
 class MYPROJECT_API UAbilitySetDataAsset : public UDataAsset
-{
+{   
     GENERATED_BODY()
 
 public:

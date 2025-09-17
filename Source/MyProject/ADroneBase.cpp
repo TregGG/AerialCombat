@@ -1,30 +1,31 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "ADroneBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "./Public/DronePlayerState.h"
+#include "DronePlayerState.h"
 #include "GameFramework/PlayerController.h"
+#include "AircraftMovementComponent.h"
 
 AADroneBase::AADroneBase()
 {
+    bReplicates = true;
+    // DO NOT use SetReplicateMovement(true) because we have custom replication
+
     PrimaryActorTick.bCanEverTick = true;
+
     DroneVelocity = FVector::ZeroVector;
     SteerInput = FVector2D::ZeroVector;
-	CameraInputStick = FVector2D::ZeroVector;
+    CameraInputStick = FVector2D::ZeroVector;
     CamRotation = FRotator::ZeroRotator;
+
+    // Drone mesh
     DroneVisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DroneVisualMesh"));
     DroneVisualMesh->AddLocalRotation(DroneMeshOffestRotation);
     DroneVisualMesh->SetupAttachment(RootComponent);
-    //AbilityComponent = CreateDefaultSubobject<UAbilityComponent>(TEXT("AbilityComponent"));
-    
-    //FirePoint
+
+    // Fire point
     FirePoint = CreateDefaultSubobject<USceneComponent>(TEXT("FirePoint"));
     FirePoint->SetupAttachment(RootComponent);
-    
-    // Ability Manager is inherited from AAircraftBase
-    
+
     UE_LOG(LogTemp, Log, TEXT("Drone Constructor: Called"));
 }
 
@@ -32,100 +33,101 @@ void AADroneBase::BeginPlay()
 {
     Super::BeginPlay();
     UE_LOG(LogTemp, Log, TEXT("Drone BeginPlay: Called"));
-    
-    // Ability Manager is initialized by AAircraftBase::BeginPlay()
-    // No need to duplicate the setup here
 }
 
 void AADroneBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-	//Camera Rotation
-    CamRotation += FRotator(CameraStats.CameraPitchSpeed*CameraInputStick.Y	, CameraStats.CameraYawSpeed*CameraInputStick.X, 0.f);
-    //UE_LOG(LogTemp, Log, TEXT("CamRotation : %s"), *CamRotation.ToString());
-    //CamRotation.Yaw = FMath::Abs(CamRotation.Yaw) >= 180 ? CamRotation.Yaw - 360*FMath::Sign(CamRotation.Yaw) : CamRotation.Yaw;
-    CamRotation.Pitch = FMath::Clamp(CamRotation.Pitch,  CameraStats.CameraPitchMin, CameraStats.CameraPitchMax);
-    CameraBoom->SetWorldRotation(CamRotation);
-    // Simple acceleration-based movement
 
-    //Declaration of Variables0
+    // Camera rotation is purely local (not replicated)
+    CamRotation += FRotator(CameraStats.CameraPitchSpeed * CameraInputStick.Y,
+        CameraStats.CameraYawSpeed * CameraInputStick.X,
+        0.f);
+    CamRotation.Pitch = FMath::Clamp(CamRotation.Pitch, CameraStats.CameraPitchMin, CameraStats.CameraPitchMax);
+    CameraBoom->SetWorldRotation(CamRotation);
+}
+
+void AADroneBase::SimulateFlightPhysics(float DeltaTime)
+{
+    // Get directional vectors
     FVector Forward = GetActorForwardVector();
     FVector Right = GetActorRightVector();
-    FVector currentCamForwardVector = CameraBoom->GetForwardVector();
-    FRotator currentRotation = GetActorRotation();
-	FVector currentCamRightVector = CameraBoom->GetRightVector();
 
-
-    currentRotation.Yaw = FMath::FInterpTo(currentRotation.Yaw, CamRotation.Yaw, DeltaTime, DroneBuildStats.YawRotationSpeed);
-    //UE_LOG(LogTemp, Log, TEXT("CurrentRotation : %s "), *currentRotation.ToString());
-    if (FMath::Abs(CamRotation.Pitch) >= DroneBuildStats.VerticalClimbAngleCutOff) {
-        currentRotation.Pitch = DroneBuildStats.VerticalClimbAngleCutOff * FMath::Sign(CamRotation.Pitch);
-    }
-    else {
-        currentRotation.Pitch = CamRotation.Pitch;
-    }
-
-	
+    // Desired movement from input
     FVector DesiredMove = (Forward * SteerInput.Y + Right * SteerInput.X).GetClampedToMaxSize(1.0f);
     FVector Acceleration = DesiredMove * DroneBuildStats.Acceleration;
 
     // Apply drag
-    FVector Drag = -DroneVelocity * DroneBuildStats.DragCoeff;
+    FVector CurrentVel = AircraftMovementComp->GetLinearVelocity();
+    FVector Drag = -CurrentVel * DroneBuildStats.DragCoeff;
 
     // Update velocity
-    DroneVelocity += (Acceleration + Drag) * DeltaTime;
-    DroneVelocity = DroneVelocity.GetClampedToMaxSize(DroneBuildStats.Speed);
+    FVector NewVelocity = CurrentVel + (Acceleration + Drag) * DeltaTime;
+    NewVelocity = NewVelocity.GetClampedToMaxSize(DroneBuildStats.Speed);
+    AircraftMovementComp->SetLinearVelocity(NewVelocity);
+    UE_LOG(LogTemp, Log, TEXT("Setting linear Velocity- %s"), *NewVelocity.ToString())
 
-    // Move the drone
-    FVector NewRotation(currentRotation.Pitch, currentRotation.Yaw, currentRotation.Roll);
-	AircraftMovementComp->SetLinearVelocity(DroneVelocity);
-    AircraftMovementComp->SetAngularRotation(NewRotation);//Fvector Pitch,Yaw,Roll
+    // Angular rotation
+    FRotator DesiredRot = GetActorRotation();
+    DesiredRot.Yaw = FMath::FInterpTo(DesiredRot.Yaw, CamRotation.Yaw, DeltaTime, DroneBuildStats.YawRotationSpeed);
+    DesiredRot.Pitch = FMath::Clamp(CamRotation.Pitch,
+        -DroneBuildStats.VerticalClimbAngleCutOff,
+        DroneBuildStats.VerticalClimbAngleCutOff);
 
+    AircraftMovementComp->SetAngularRotation(FVector(DesiredRot.Pitch, DesiredRot.Yaw, DesiredRot.Roll));
 
-    //For Mesh
-    //const float ForwardSpeed = FVector::DotProduct(DroneVelocity, Forward);
-    //const float RightSpeed = FVector::DotProduct(DroneVelocity, Right);
-    float SpeedWiseTilt = FMath::Clamp(FMath::Abs(DroneVelocity.Size()),DroneBuildStats.MinTiltAngle, 90);
-    
-    TargetVisualMeshRotation.Pitch = FMath::Clamp(-SteerInput.Y * SpeedWiseTilt * 0.1f, -DroneBuildStats.PitchTiltAngle, DroneBuildStats.PitchTiltAngle); // Adjust scale/clamp
-    TargetVisualMeshRotation.Roll = FMath::Clamp(SteerInput.X   *SpeedWiseTilt * 0.1f, -DroneBuildStats.RollTiltAngle, DroneBuildStats.RollTiltAngle); // or set it based on yaw/banking
-    ////For input=0,0
-    if (SteerInput.IsNearlyZero()) {
+    // Cache for cosmetics
+    DroneVelocity = NewVelocity;
+
+    // Mesh tilt
+    UpdateDroneVisualMeshTilt(DeltaTime, NewVelocity);
+}
+
+void AADroneBase::UpdateDroneVisualMeshTilt(float DeltaTime, const FVector& CurrVelocity)
+{
+    float SpeedWiseTilt = FMath::Clamp(FMath::Abs(CurrVelocity.Size()), DroneBuildStats.MinTiltAngle, 90);
+
+    TargetVisualMeshRotation.Pitch = FMath::Clamp(-SteerInput.Y * SpeedWiseTilt * 0.1f,
+        -DroneBuildStats.PitchTiltAngle,
+        DroneBuildStats.PitchTiltAngle);
+    TargetVisualMeshRotation.Roll = FMath::Clamp(SteerInput.X * SpeedWiseTilt * 0.1f,
+        -DroneBuildStats.RollTiltAngle,
+        DroneBuildStats.RollTiltAngle);
+
+    if (SteerInput.IsNearlyZero())
         TargetVisualMeshRotation = FRotator::ZeroRotator;
-    }
+
     TargetVisualMeshRotation.Pitch -= GetActorRotation().Pitch;
-    FQuat TargetVisualMeshRotationQuat = TargetVisualMeshRotation.Quaternion()* DroneMeshOffestRotation.Quaternion()  ;
-    // Interpolate smoothly
-    const FQuat CurrentVisualRotation = DroneVisualMesh->GetRelativeRotation().Quaternion();
-    FQuat NewVisualRotation = FMath::QInterpTo(CurrentVisualRotation, TargetVisualMeshRotationQuat, DeltaTime, 5.0f);
-    DroneVisualMesh->SetRelativeRotation(NewVisualRotation);
+
+    const FQuat TargetQuat = TargetVisualMeshRotation.Quaternion() * DroneMeshOffestRotation.Quaternion();
+    const FQuat CurrentQuat = DroneVisualMesh->GetRelativeRotation().Quaternion();
+    FQuat NewQuat = FMath::QInterpTo(CurrentQuat, TargetQuat, DeltaTime, 5.0f);
+    DroneVisualMesh->SetRelativeRotation(NewQuat);
 }
 
 void AADroneBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+    // Bind input to CameraInput/SteerInputHandler here
 }
 
 void AADroneBase::CameraInput(FVector2D Input)
 {
     CameraInputStick = Input;
-    UE_LOG(LogTemp, Log, TEXT("Drone CameraInput: Input = %s"), *Input.ToString());
 }
+
 void AADroneBase::SteerInputHandler(FVector2D Input)
 {
     SteerInput = Input;
-    UE_LOG(LogTemp, Log, TEXT("Drone SteerInputHandler: Input = %s"), *Input.ToString());
 }
 
 void AADroneBase::OnRep_PlayerState()
 {
     Super::OnRep_PlayerState();
     UE_LOG(LogTemp, Log, TEXT("Drone OnRep_PlayerState: Called"));
-    // Don't call InitAbilitySystemComponent() for drone
 }
 
 void AADroneBase::InitAbilitySystemComponent()
 {
-    // This function is now handled by UAbilityManager
     UE_LOG(LogTemp, Log, TEXT("Drone InitAbilitySystemComponent: Now handled by UAbilityManager"));
 }

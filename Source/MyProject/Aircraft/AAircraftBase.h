@@ -30,6 +30,13 @@ protected:
 	float YawInput = 0.f;
 	FVector LastTurbulence = FVector::ZeroVector;
 	FEnvAirflow EnvAirflow;
+
+	// We send input at custom rate with timer function on begin play
+	UFUNCTION(Server, Unreliable)
+	void Server_SendInputs(float OwningClientThrust, FVector2D OwningClientSteering, float OwningClientYaw);
+	void SendInputsToServer();
+
+
 public:
 	virtual void CalculateAerialPhysics(float DeltaTime, FVector& OutLinearAcceleration, FVector& OutAngularVelocity);
 	virtual void SetAerialInputs(float Thrust, const FVector2D& SteeringInput, float YawInput);

@@ -14,6 +14,8 @@ AAAircraftBase::AAAircraftBase()
 
 }
 
+
+
 void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearAcceleration, FVector& OutAngularVelocity)
 {
     OutLinearAcceleration = FVector::ZeroVector;
@@ -119,7 +121,35 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
 void AAAircraftBase::BeginPlay()
 {
 	Super::BeginPlay();
+    if (IsLocallyControlled()) // only the owning client sends its inputs
+    {
+        FTimerHandle InputSendTimer;
+        GetWorldTimerManager().SetTimer(
+            InputSendTimer,
+            this,
+            &AAAircraftBase::SendInputsToServer, // wrapper function
+            0.1f,  // every 100ms (10Hz)
+            true
+        );
+    }
 }
+
+void AAAircraftBase::SendInputsToServer()
+{
+    // WRAPPER FUNCTION IS NEEDED CUZ OTHERWISE ONLY ON FIRST TIME CURRENT VALUE WOULD BE SENT, ON EACH ITTERATION WE WANT
+    // THE CURRENT VALUES ON THE OWNING CLIENT TO BE RUNNING
+    Server_SendInputs(CurrentThrust, SteeringInput, YawInput);
+}
+
+void AAAircraftBase::Server_SendInputs_Implementation(float OwningClientThrust, FVector2D OwningClientSteering, float OwningClientYaw)
+{
+    // Sanity Checking LOGIC for thrust can be applied here / but we would also have abilities
+    // so keeping sanity check off for an while.
+    CurrentThrust = OwningClientThrust;
+    SteeringInput = OwningClientSteering;
+    YawInput = OwningClientYaw;
+}
+
 
 // Called every frame
 void AAAircraftBase::Tick(float DeltaTime)
@@ -195,6 +225,7 @@ void AAAircraftBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AAAircraftBase::SetAerialInputs(float Thrust, const FVector2D& InSteeringInput, float InYawInput)
 {
+   
     CurrentThrust   = FMath::Clamp(Thrust, 0.f, 1.f);
     SteeringInput   = InSteeringInput;
     YawInput        = InYawInput;

@@ -2,7 +2,6 @@
 
 
 #include "AAircraftBase.h"
-
 #include "MovieSceneTracksComponentTypes.h"
 
 // Sets default values

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h" // <-- Required for FInputActionValue
+
 #include "GameFramework/PlayerController.h"
 #include "ACPlayerController.generated.h"
 

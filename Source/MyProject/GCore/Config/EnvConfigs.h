@@ -1,8 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "EnvConfigs
-.generated.h"
+#include "EnvConfigs.generated.h"
 
 
 

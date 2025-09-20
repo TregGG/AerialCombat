@@ -3,11 +3,15 @@
 
 #include "AAircraftBase.h"
 
+#include "MovieSceneTracksComponentTypes.h"
+
 // Sets default values
 AAAircraftBase::AAAircraftBase()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;
+    ConstructPlaneMesh();
 
 }
 
@@ -112,6 +116,84 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
     }
 }
 
+// Called when the game starts or when spawned
+void AAAircraftBase::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+// Called every frame
+void AAAircraftBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
+
+void AAAircraftBase::ConstructPlaneMesh()
+{
+    PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh"));
+    PlaneMesh->SetupAttachment(RootComponent);
+    PlaneMesh->SetWorldScale3D(FVector(1.f));
+    if (PlaneMeshAsset)
+    {
+        PlaneMesh->SetStaticMesh(PlaneMeshAsset);
+    }
+    
+}
+
+void AAAircraftBase::UpdatePlaneMeshAppearance()
+{
+    if (PlaneMeshAsset && PlaneMesh)
+    {
+        PlaneMesh->SetStaticMesh(PlaneMeshAsset);
+    }
+}
+
+void AAAircraftBase::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    UpdatePlaneMeshAppearance();
+}
+
+void AAAircraftBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+    Super::PostEditChangeProperty(PropertyChangedEvent);
+    UpdatePlaneMeshAppearance();
+}
+
+void AAAircraftBase::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+
+    if (AACPlayerController* PC = Cast<AACPlayerController>(NewController))
+    {
+        // Bind once per possession
+        PC->OnSteerInput.AddDynamic(this, &AAAircraftBase::HandleSteerInput);
+        PC->OnYawInput.AddDynamic(this, &AAAircraftBase::HandleYawInput);
+        PC->OnThrustInput.AddDynamic(this, &AAAircraftBase::HandleThrustInput);
+    }
+}
+
+void AAAircraftBase::UnPossessed()
+{
+    if (AACPlayerController* PC = Cast<AACPlayerController>(GetController()))
+    {
+        // Unbind to prevent dangling references
+        PC->OnSteerInput.RemoveDynamic(this, &AAAircraftBase::HandleSteerInput);
+        PC->OnYawInput.RemoveDynamic(this, &AAAircraftBase::HandleYawInput);
+        PC->OnThrustInput.RemoveDynamic(this, &AAAircraftBase::HandleThrustInput);
+    }
+
+    Super::UnPossessed();
+}
+
+// Called to bind functionality to input
+void AAAircraftBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+
 void AAAircraftBase::SetAerialInputs(float Thrust, const FVector2D& InSteeringInput, float InYawInput)
 {
     CurrentThrust   = FMath::Clamp(Thrust, 0.f, 1.f);
@@ -119,25 +201,19 @@ void AAAircraftBase::SetAerialInputs(float Thrust, const FVector2D& InSteeringIn
     YawInput        = InYawInput;
 }
 
-
-// Called when the game starts or when spawned
-void AAAircraftBase::BeginPlay()
+void AAAircraftBase::HandleSteerInput(const FVector2D InSteeringInput)
 {
-	Super::BeginPlay();
-	
+    SteeringInput   = InSteeringInput;
 }
 
-// Called every frame
-void AAAircraftBase::Tick(float DeltaTime)
+void AAAircraftBase::HandleYawInput(float InYawInput)
 {
-	Super::Tick(DeltaTime);
-
+    YawInput        = InYawInput;
 }
 
-// Called to bind functionality to input
-void AAAircraftBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AAAircraftBase::HandleThrustInput(float Thrust)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+    CurrentThrust   = FMath::Clamp(Thrust, 0.f, 1.f);
 }
+
 

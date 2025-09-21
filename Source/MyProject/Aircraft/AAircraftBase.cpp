@@ -119,65 +119,58 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
                 break;
         }
 
-        case EFlightType::Drone:
-        {
-            const auto& Cfg = DroneConfig;
+    case EFlightType::Drone:
+            {
+                const auto& Cfg = DroneConfig;
 
-            FVector Forward = GetActorForwardVector();
-            FVector Up      = GetActorUpVector();
-            FVector Vel     = MoveComp->LastLinearVelocity;;
+                FVector Forward = GetActorForwardVector();
+                FVector Up      = GetActorUpVector();
+                FVector Vel     = MoveComp->LastLinearVelocity;
 
-            // --- Thrust ---
-            FVector ForwardAccel = Forward * (CurrentThrust * Cfg.Acceleration);
+                // --- Thrust ---
+                FVector ForwardAccel = Forward * (CurrentThrust * Cfg.Acceleration);
 
-            // --- Drag ---
-            FVector Drag = -Vel * Cfg.DragCoefficient;
+                // --- Drag / natural slowdown ---
+                float LinearDamping = Cfg.DragCoefficient; // e.g., 4~8, tweak for snappy stop
+                FVector DampedDrag = -Vel * LinearDamping;
 
-            // --- Environment ---
-            FVector Wind       = EnvAirflow.WindDirection * EnvAirflow.WindForce;
-            FVector Updraft    = EnvAirflow.UpdraftForce * Up;
-            FVector Turbulence = EnvAirflow.TurbulenceStrength * LastTurbulence;
+                // --- Environment ---
+                FVector Wind       = EnvAirflow.WindDirection * EnvAirflow.WindForce;
+                FVector Updraft    = EnvAirflow.UpdraftForce * Up;
+                FVector Turbulence = EnvAirflow.TurbulenceStrength * LastTurbulence;
 
-            OutLinearAcceleration = (ForwardAccel + Drag + Wind + Updraft + Turbulence) / FMath::Max(Cfg.Mass, 1.f);
+                // --- Total linear acceleration ---
+                OutLinearAcceleration = (ForwardAccel + DampedDrag + Wind + Updraft + Turbulence) / FMath::Max(Cfg.Mass, 1.f);
+
                 // --- Angular motion ---
                 static FVector SmoothedAngularVelocity = FVector::ZeroVector;
 
                 FVector DesiredAngularVelocity = FVector::ZeroVector;
 
                 if (!FMath::IsNearlyZero(SteeringInput.Y))
-                {
                     DesiredAngularVelocity.X = SteeringInput.Y * Cfg.MaxPitchAngle; // Pitch
-                }
-
                 if (!FMath::IsNearlyZero(SteeringInput.X))
-                {
                     DesiredAngularVelocity.Y = SteeringInput.X * Cfg.MaxRollAngle;  // Roll
-                }
-
                 if (!FMath::IsNearlyZero(YawInput))
-                {
                     DesiredAngularVelocity.Z = YawInput * Cfg.YawRate;              // Yaw
-                }
 
-                // Smooth damping towards desired angular velocity
-                float DampingFactor = 6.f; // tweak this: higher = snappier stop
+                // Smooth damping for angular velocity
+                float AngularDampingFactor = 8.f; // tweak for snappy rotation stop
                 SmoothedAngularVelocity = FMath::VInterpTo(
                     SmoothedAngularVelocity,
                     DesiredAngularVelocity,
                     DeltaTime,
-                    DampingFactor
+                    AngularDampingFactor
                 );
 
-                // Snap small values to zero so it actually stops
+                // Snap very small rotation to zero
                 if (SmoothedAngularVelocity.SizeSquared() < KINDA_SMALL_NUMBER)
-                {
                     SmoothedAngularVelocity = FVector::ZeroVector;
-                }
 
                 OutAngularVelocity = SmoothedAngularVelocity;
 
                 break;
-        }
+            }
     }
 }
 

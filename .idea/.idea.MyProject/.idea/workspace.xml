@@ -16,9 +16,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MyProject/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MyProject/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Main/Aircraft/BPAPlayerAircraft.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Main/Aircraft/BPAPlayerAircraft.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/AAircraftBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Aircraft/AAircraftBase.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.cpp~" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/GCore/Config/FlightConfigs.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/GCore/Config/FlightConfigs.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -176,7 +173,7 @@
       <workItem from="1758417950221" duration="590000" />
       <workItem from="1758418878957" duration="2496000" />
       <workItem from="1758422049188" duration="12461000" />
-      <workItem from="1758449707966" duration="2717000" />
+      <workItem from="1758449707966" duration="3860000" />
     </task>
     <servers />
   </component>

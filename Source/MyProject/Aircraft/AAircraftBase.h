@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "MyProject/GCore/Config.h"
+#include "FPVMovementComponent.h"
 #include "MyProject/Player/ACPlayerController.h"
 #include "AAircraftBase.generated.h"
 
@@ -30,11 +31,15 @@ protected:
 	float YawInput = 0.f;
 	FVector LastTurbulence = FVector::ZeroVector;
 	FEnvAirflow EnvAirflow;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight")
+	UFPVMovementComponent* MoveComp;
+	
 
 	// We send input at custom rate with timer function on begin play
 	UFUNCTION(Server, Unreliable)
 	void Server_SendInputs(float OwningClientThrust, FVector2D OwningClientSteering, float OwningClientYaw);
 	void SendInputsToServer();
+	virtual void OnRep_Controller() override; 
 
 
 public:

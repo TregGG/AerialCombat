@@ -9,6 +9,7 @@ UFPVMovementComponent::UFPVMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
+	LastLinearVelocity = FVector::ZeroVector;
 }
 
 void UFPVMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -27,6 +28,9 @@ void UFPVMovementComponent::BeginPlay()
 	{
 		SimulatedLocation = PawnOwner->GetActorLocation();
 		SimulatedRotation = PawnOwner->GetActorRotation();
+		ServerState.Location = GetActorLocation();
+		ServerState.LinearVelocity = ServerState.Rotation.RotateVector(FVector(0, 0, 0));
+		ServerState.AngularVelocity = ServerState.Rotation.RotateVector(FVector(0, 0, 0));
 	}
 }
 
@@ -94,30 +98,55 @@ void UFPVMovementComponent::Server_SyncTrasnform_Implementation(FVector OwningCl
 }
 
 // ONLY PAWN OWNER & SERVER DO THE PHYSICS CALCULATION
-void UFPVMovementComponent::ApplyPhysicsStep(float DeltaTime, const FVector& InLinearVel, const FVector& InAngularVel)
+void UFPVMovementComponent::ApplyPhysicsStep(float DeltaTime, const FVector& InLinearAcel, const FVector& InAngularVel)
 {
 	if (!PawnOwner) return;
-
+	
 	// Integrate locally
-	SimulatedLocation += InLinearVel * DeltaTime;
-	SimulatedRotation += FRotator(InAngularVel.X * DeltaTime,
-								  InAngularVel.Y * DeltaTime,
-								  InAngularVel.Z * DeltaTime);
+
+	// --- Integrate acceleration into velocity ---
+	LastLinearVelocity += InLinearAcel * DeltaTime;
+
+	// --- Integrate velocity into position ---
+	SimulatedLocation += LastLinearVelocity * DeltaTime;
+	float DampingFactor = 5.f; // tweak this (higher = faster stop)
+	LastAngularVelocity = FMath::VInterpTo(LastAngularVelocity, InAngularVel, DeltaTime, DampingFactor);
+
+
+	SimulatedRotation = PawnOwner->GetActorRotation()+ FRotator(
+		LastAngularVelocity.X,
+		LastAngularVelocity.Y,
+		LastAngularVelocity.Z
+	);
+	
 
 	PawnOwner->SetActorLocation(SimulatedLocation);
 	PawnOwner->SetActorRotation(SimulatedRotation);
 
-	LastLinearVelocity = InLinearVel;
-	LastAngularVelocity = InAngularVel;
-
+	LastAngularVelocity = FVector(0, 0, 0);
+	LastLinearVelocity = LastLinearVelocity;
 	// If server, replicate authoritative state
 	if (PawnOwner->HasAuthority())
 	{
 		ServerState.Location = SimulatedLocation;
 		ServerState.Rotation = SimulatedRotation;
-		ServerState.LinearVelocity = InLinearVel;
-		ServerState.AngularVelocity = InAngularVel;
+		ServerState.LinearVelocity = LastLinearVelocity;
+		ServerState.AngularVelocity = LastAngularVelocity;
 	}
+
+	// --- Debug logging once per second ---
+	static float TimeAccumulator = 0.f;
+	TimeAccumulator += DeltaTime;
+
+	if (TimeAccumulator >= 10.0f)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[FPVMovement] LinearVel: %s | AngularVel: %s"),
+			*LastLinearVelocity.ToString(),
+			*InAngularVel.ToString());
+
+		TimeAccumulator = 0.f;
+	}
+
 }
 
 

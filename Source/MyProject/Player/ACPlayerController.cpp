@@ -16,6 +16,8 @@ void AACPlayerController::SetupInputComponent()
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("SetupInputComponent - Mapping Context = %s"), *GetNameSafe(InputMappingContext));
+
 		Subsystem->AddMappingContext(InputMappingContext, 0);
 	}
 
@@ -24,6 +26,11 @@ void AACPlayerController::SetupInputComponent()
 		EnhancedInputComp->BindAction(IA_Steer, ETriggerEvent::Ongoing, this, &AACPlayerController::ProcessSteer);
 		EnhancedInputComp->BindAction(IA_Yaw,   ETriggerEvent::Ongoing, this, &AACPlayerController::ProcessYaw);
 		EnhancedInputComp->BindAction(IA_Thrust,ETriggerEvent::Ongoing, this, &AACPlayerController::ProcessThrust);
+		EnhancedInputComp->BindAction(IA_Steer, ETriggerEvent::Completed, this, &AACPlayerController::ResetSteer);
+		EnhancedInputComp->BindAction(IA_Yaw,   ETriggerEvent::Completed, this, &AACPlayerController::ResetYaw);
+		EnhancedInputComp->BindAction(IA_Thrust,ETriggerEvent::Completed, this, &AACPlayerController::ResetThrust);
+
+		
 	}
 
 }
@@ -39,6 +46,24 @@ void AACPlayerController::ProcessYaw(const FInputActionValue& Value)
 {
 	float Input = Value.Get<float>();
 	OnYawInput.Broadcast(Input);
+}
+
+void AACPlayerController::ResetThrust(const FInputActionValue& Value)
+{
+	OnThrustInput.Broadcast(0);
+}
+
+void AACPlayerController::ResetSteer(const FInputActionValue& Value)
+{
+	FVector2D Input = FVector2D::ZeroVector;
+	OnSteerInput.Broadcast(Input);
+
+}
+
+void AACPlayerController::ResetYaw(const FInputActionValue& Value)
+{
+	OnYawInput.Broadcast(0);
+
 }
 
 void AACPlayerController::ProcessThrust(const FInputActionValue& Value)

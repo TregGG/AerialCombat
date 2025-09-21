@@ -2,7 +2,9 @@
 
 
 #include "AAircraftBase.h"
+
 #include "MovieSceneTracksComponentTypes.h"
+#include "Misc/LowLevelTestAdapter.h"
 
 // Sets default values
 AAAircraftBase::AAAircraftBase()
@@ -10,7 +12,11 @@ AAAircraftBase::AAAircraftBase()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
+    SetAutonomousProxy(true);
+    
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
     ConstructPlaneMesh();
+    MoveComp = CreateDefaultSubobject<UFPVMovementComponent>(TEXT("MoveComp"));
 
 }
 
@@ -29,7 +35,7 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
 
             FVector Forward = GetActorForwardVector();
             FVector Up      = GetActorUpVector();
-            FVector Vel     = GetVelocity();
+            FVector Vel     = MoveComp->LastLinearVelocity;
             FVector VelDir  = Vel.GetSafeNormal();
 
             // --- Gravity ---
@@ -90,7 +96,7 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
 
             FVector Forward = GetActorForwardVector();
             FVector Up      = GetActorUpVector();
-            FVector Vel     = GetVelocity();
+            FVector Vel     = MoveComp->LastLinearVelocity;;
 
             // --- Thrust ---
             FVector ForwardAccel = Forward * (CurrentThrust * Cfg.Acceleration);
@@ -106,11 +112,24 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
             OutLinearAcceleration = (ForwardAccel + Drag + Wind + Updraft + Turbulence) / FMath::Max(Cfg.Mass, 1.f);
 
             // --- Angular motion ---
-            OutAngularVelocity = FVector(
-                SteeringInput.Y * Cfg.MaxPitchAngle,
-                SteeringInput.X * Cfg.MaxRollAngle,
-                YawInput * Cfg.YawRate
-            );
+                FVector NewAngularVelocity = FVector::ZeroVector;
+
+                if (!FMath::IsNearlyZero(SteeringInput.Y))
+                {
+                    NewAngularVelocity.X = SteeringInput.Y * Cfg.MaxPitchAngle; // Pitch
+                }
+
+                if (!FMath::IsNearlyZero(SteeringInput.X))
+                {
+                    NewAngularVelocity.Y = SteeringInput.X * Cfg.MaxRollAngle;  // Roll
+                }
+
+                if (!FMath::IsNearlyZero(YawInput))
+                {
+                    NewAngularVelocity.Z = YawInput * Cfg.YawRate;               // Yaw
+                }
+
+                OutAngularVelocity = NewAngularVelocity;
 
             break;
         }
@@ -121,6 +140,7 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
 void AAAircraftBase::BeginPlay()
 {
 	Super::BeginPlay();
+   
     if (IsLocallyControlled()) // only the owning client sends its inputs
     {
         FTimerHandle InputSendTimer;
@@ -131,7 +151,9 @@ void AAAircraftBase::BeginPlay()
             0.1f,  // every 100ms (10Hz)
             true
         );
+
     }
+
 }
 
 void AAAircraftBase::SendInputsToServer()
@@ -155,6 +177,20 @@ void AAAircraftBase::Server_SendInputs_Implementation(float OwningClientThrust, 
 void AAAircraftBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+    check(MoveComp)
+    
+    if ((HasAuthority() || IsLocallyControlled()))
+    {
+        FVector LinearAccel;
+        FVector AngularVel;
+
+        // Always compute physics based on inputs/environment
+        CalculateAerialPhysics(DeltaTime, LinearAccel, AngularVel);
+              
+        // Owning client + server both call ApplyPhysicsStep
+        MoveComp->ApplyPhysicsStep(DeltaTime, LinearAccel, AngularVel);
+    }
+
 }
 
 
@@ -194,17 +230,40 @@ void AAAircraftBase::PossessedBy(AController* NewController)
 {
     Super::PossessedBy(NewController);
 
-    if (AACPlayerController* PC = Cast<AACPlayerController>(NewController))
+    if (AACPlayerController* PC = Cast<AACPlayerController>(GetController()))
     {
         // Bind once per possession
         PC->OnSteerInput.AddDynamic(this, &AAAircraftBase::HandleSteerInput);
         PC->OnYawInput.AddDynamic(this, &AAAircraftBase::HandleYawInput);
         PC->OnThrustInput.AddDynamic(this, &AAAircraftBase::HandleThrustInput);
+        PRINTSCREEN("BINDING SUCCESSFULL FOR STEER YAW THRUST SERVER")
+
+    }
+
+    
+}
+
+void AAAircraftBase::OnRep_Controller()
+{
+    Super::OnRep_Controller();
+    if (!IsLocallyControlled()) {return;}
+    if (AACPlayerController* PC = Cast<AACPlayerController>(GetController()))
+    {
+        // Client side binding when Controller gets replicated
+        PC->OnSteerInput.AddDynamic(this, &AAAircraftBase::HandleSteerInput);
+        PC->OnYawInput.AddDynamic(this, &AAAircraftBase::HandleYawInput);
+        PC->OnThrustInput.AddDynamic(this, &AAAircraftBase::HandleThrustInput);
+        PRINTSCREEN("BINDING SUCCESSFULL FOR STEER YAW THRUST CLIENT")
+
     }
 }
 
+
+
 void AAAircraftBase::UnPossessed()
 {
+    UE_LOG(LogTemp, Log, TEXT("UnPossessed() called"));
+
     if (AACPlayerController* PC = Cast<AACPlayerController>(GetController()))
     {
         // Unbind to prevent dangling references
@@ -220,6 +279,8 @@ void AAAircraftBase::UnPossessed()
 void AAAircraftBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+    
+    
 }
 
 
@@ -233,17 +294,21 @@ void AAAircraftBase::SetAerialInputs(float Thrust, const FVector2D& InSteeringIn
 
 void AAAircraftBase::HandleSteerInput(const FVector2D InSteeringInput)
 {
+    PRINTSCREEN("Steering Input Handle CALLED by the controller");
     SteeringInput   = InSteeringInput;
 }
 
 void AAAircraftBase::HandleYawInput(float InYawInput)
 {
+    PRINTSCREEN("YAW Input Handle CALLED by the controller");
     YawInput        = InYawInput;
 }
 
-void AAAircraftBase::HandleThrustInput(float Thrust)
+void AAAircraftBase::HandleThrustInput(float InThrustInput)
 {
-    CurrentThrust   = FMath::Clamp(Thrust, 0.f, 1.f);
+    PRINTSCREEN("THRUST Input Handle CALLED by the controller");
+
+    CurrentThrust   = FMath::Clamp(InThrustInput, 0.f, 1.f);
 }
 
 

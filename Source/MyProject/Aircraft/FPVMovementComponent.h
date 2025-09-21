@@ -29,7 +29,7 @@ class MYPROJECT_API UFPVMovementComponent : public UPawnMovementComponent
 {
 	GENERATED_BODY()
 	UFPVMovementComponent();
-
+public:
 	void ApplyPhysicsStep(float DeltaTime, const FVector& InLinearVel, const FVector& InAngularVel);
 
 protected:
@@ -46,13 +46,15 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SyncTrasnform(FVector OwningClientLocation, FRotator OwningClienRotation, float DeltaTime);
 
+public:
+	FVector LastLinearVelocity;
+	FVector LastAngularVelocity;
+
 	
 private:
 	FVector SimulatedLocation;
 	FRotator SimulatedRotation;
 
-	FVector LastLinearVelocity;
-	FVector LastAngularVelocity;
 
 	UPROPERTY(EditAnywhere)
 	float TeleportThreshold = 1000.f;

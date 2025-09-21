@@ -42,6 +42,8 @@ private:
 	void ProcessThrust(const FInputActionValue& Value);
 	void ProcessSteer(const FInputActionValue& Value);
 	void ProcessYaw(const FInputActionValue& Value);
-	
+	void ResetThrust(const FInputActionValue& Value);
+	void ResetSteer(const FInputActionValue& Value);
+	void ResetYaw(const FInputActionValue& Value);
 	virtual void SetupInputComponent() override;
 };

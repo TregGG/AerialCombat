@@ -61,11 +61,11 @@ struct FAircraftConfig : public FBaseFlightConfig
     float StabilityTorque = 1000.f;
     /** Control rates (deg/s) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight|Controls")
-    float PitchRate = 90.f;
+    float PitchRate = 5.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight|Controls")
-    float RollRate = 90.f;
+    float RollRate = 5.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight|Controls")
-    float YawRate = 45.f;
+    float YawRate = 5.f;
 };
 
 /**
@@ -92,11 +92,11 @@ struct FDroneConfig : public FBaseFlightConfig
     float DragCoefficient = 0.1f;
     /** Control responsiveness */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight|Controls")
-    float YawRate = 90.f;
+    float YawRate = 30.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight|Controls")
-    float MaxPitchAngle = 30.f;
+    float MaxPitchAngle = 10.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight|Controls")
-    float MaxRollAngle = 30.f;
+    float MaxRollAngle = 10.f;
     /** Minimum tilt needed to generate horizontal movement */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flight|Controls")
     float MinTiltAngle = 5.f;

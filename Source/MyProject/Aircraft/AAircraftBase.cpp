@@ -81,13 +81,42 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
             OutLinearAcceleration = TotalForce / FMath::Max(Cfg.Mass, 1.f);
 
             // --- Angular motion from player + stall ---
-            OutAngularVelocity = FVector(
-                SteeringInput.Y * Cfg.PitchRate,
-                SteeringInput.X * Cfg.RollRate,
-                YawInput * Cfg.YawRate
-            ) + StallTorque;
+            static FVector SmoothedAngularVelocity = FVector::ZeroVector;
 
-            break;
+            FVector DesiredAngularVelocity = FVector::ZeroVector;
+
+                if (!FMath::IsNearlyZero(SteeringInput.Y))
+                {
+                    DesiredAngularVelocity.X = SteeringInput.Y * Cfg.PitchRate; // Pitch
+                }
+
+                if (!FMath::IsNearlyZero(SteeringInput.X))
+                {
+                    DesiredAngularVelocity.Y = SteeringInput.X * Cfg.RollRate;  // Roll
+                }
+
+                if (!FMath::IsNearlyZero(YawInput))
+                {
+                    DesiredAngularVelocity.Z = YawInput * Cfg.YawRate;          // Yaw
+                }
+
+                // Smooth damping (blend player input with stall torque)
+                float DampingFactor = 4.f; // tweak: higher = faster stop
+                SmoothedAngularVelocity = FMath::VInterpTo(
+                    SmoothedAngularVelocity,
+                    DesiredAngularVelocity + StallTorque,
+                    DeltaTime,
+                    DampingFactor
+                );
+
+                if (SmoothedAngularVelocity.SizeSquared() < KINDA_SMALL_NUMBER)
+                {
+                    SmoothedAngularVelocity = FVector::ZeroVector;
+                }
+
+                OutAngularVelocity = SmoothedAngularVelocity;
+
+                break;
         }
 
         case EFlightType::Drone:
@@ -110,28 +139,44 @@ void AAAircraftBase::CalculateAerialPhysics(float DeltaTime, FVector& OutLinearA
             FVector Turbulence = EnvAirflow.TurbulenceStrength * LastTurbulence;
 
             OutLinearAcceleration = (ForwardAccel + Drag + Wind + Updraft + Turbulence) / FMath::Max(Cfg.Mass, 1.f);
+                // --- Angular motion ---
+                static FVector SmoothedAngularVelocity = FVector::ZeroVector;
 
-            // --- Angular motion ---
-                FVector NewAngularVelocity = FVector::ZeroVector;
+                FVector DesiredAngularVelocity = FVector::ZeroVector;
 
                 if (!FMath::IsNearlyZero(SteeringInput.Y))
                 {
-                    NewAngularVelocity.X = SteeringInput.Y * Cfg.MaxPitchAngle; // Pitch
+                    DesiredAngularVelocity.X = SteeringInput.Y * Cfg.MaxPitchAngle; // Pitch
                 }
 
                 if (!FMath::IsNearlyZero(SteeringInput.X))
                 {
-                    NewAngularVelocity.Y = SteeringInput.X * Cfg.MaxRollAngle;  // Roll
+                    DesiredAngularVelocity.Y = SteeringInput.X * Cfg.MaxRollAngle;  // Roll
                 }
 
                 if (!FMath::IsNearlyZero(YawInput))
                 {
-                    NewAngularVelocity.Z = YawInput * Cfg.YawRate;               // Yaw
+                    DesiredAngularVelocity.Z = YawInput * Cfg.YawRate;              // Yaw
                 }
 
-                OutAngularVelocity = NewAngularVelocity;
+                // Smooth damping towards desired angular velocity
+                float DampingFactor = 6.f; // tweak this: higher = snappier stop
+                SmoothedAngularVelocity = FMath::VInterpTo(
+                    SmoothedAngularVelocity,
+                    DesiredAngularVelocity,
+                    DeltaTime,
+                    DampingFactor
+                );
 
-            break;
+                // Snap small values to zero so it actually stops
+                if (SmoothedAngularVelocity.SizeSquared() < KINDA_SMALL_NUMBER)
+                {
+                    SmoothedAngularVelocity = FVector::ZeroVector;
+                }
+
+                OutAngularVelocity = SmoothedAngularVelocity;
+
+                break;
         }
     }
 }

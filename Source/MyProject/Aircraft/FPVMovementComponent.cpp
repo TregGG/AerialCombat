@@ -29,6 +29,7 @@ void UFPVMovementComponent::BeginPlay()
 		SimulatedLocation = PawnOwner->GetActorLocation();
 		SimulatedRotation = PawnOwner->GetActorRotation();
 		ServerState.Location = GetActorLocation();
+		LastLinearVelocity = PawnOwner->GetActorForwardVector()*100;
 		ServerState.LinearVelocity = ServerState.Rotation.RotateVector(FVector(0, 0, 0));
 		ServerState.AngularVelocity = ServerState.Rotation.RotateVector(FVector(0, 0, 0));
 	}
@@ -110,15 +111,41 @@ void UFPVMovementComponent::ApplyPhysicsStep(float DeltaTime, const FVector& InL
 	// --- Integrate velocity into position ---
 	SimulatedLocation += LastLinearVelocity * DeltaTime;
 	
-	float DampingFactor = 5.f; // tweak this (higher = faster stop)
+	// --- Smooth angular velocity (damped) ---
+	float DampingFactor = 10.f; // higher = faster stop
 	LastAngularVelocity = FMath::VInterpTo(LastAngularVelocity, InAngularVel, DeltaTime, DampingFactor);
 
+	// Snap to zero if nearly zero
+	if (LastAngularVelocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	{
+		LastAngularVelocity = FVector::ZeroVector;
+	}
 
-	SimulatedRotation = PawnOwner->GetActorRotation()+ FRotator(
-		LastAngularVelocity.X*DeltaTime,
-		LastAngularVelocity.Y*DeltaTime,
-		LastAngularVelocity.Z*DeltaTime
-	);
+	// --- Quaternion rotation integration ---
+	// Convert angular velocity (deg/sec) → quaternion delta
+	FVector AngularVelocityRad = FMath::DegreesToRadians(LastAngularVelocity) * DeltaTime;
+
+	// Axis-angle: rotation around angular velocity vector
+	float Angle = AngularVelocityRad.Size();
+	if (Angle > KINDA_SMALL_NUMBER)
+	{
+		FVector Axis = AngularVelocityRad / Angle; // normalize
+		FQuat DeltaQuat(Axis, Angle);
+
+		// Apply delta quaternion to current rotation
+		FQuat CurrentQuat = PawnOwner->GetActorQuat();
+		FQuat NewQuat = DeltaQuat * CurrentQuat;
+		NewQuat.Normalize();
+
+		SimulatedRotation = NewQuat.Rotator();
+		PawnOwner->SetActorRotation(NewQuat);
+	}
+	else
+	{
+		// No angular movement
+		SimulatedRotation = PawnOwner->GetActorRotation();
+	}
+
 	
 
 	PawnOwner->SetActorLocation(SimulatedLocation);

@@ -15,16 +15,12 @@
     <list default="true" id="5a07fc42-cb42-4b2d-902e-e2d41c10287f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MyProject/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MyProject/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Main/Aircraft/BPAPlayerAircraft.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Main/Aircraft/BPAPlayerAircraft.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Main/Core/BPACPlayerController.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Main/Core/BPACPlayerController.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Maps/Levels/Hills.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Maps/Levels/Hills.umap" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/8/MB/CB4Q7W4YWXOXMNEQG9QV4V.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/8/MB/CB4Q7W4YWXOXMNEQG9QV4V.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/AAircraftBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Aircraft/AAircraftBase.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/AAircraftBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Aircraft/AAircraftBase.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/GCore/Config.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/GCore/Config.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/2/HX/P7LBMJDT1PVIR4DXLPFADZ.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/4/FI/1R83OWMJ9OPSY3TN2BBJKA.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/8/MB/CB4Q7W4YWXOXMNEQG9QV4V.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/MyProject/Player/ACPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Player/ACPlayerController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Player/ACPlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Player/ACPlayerController.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,7 +177,7 @@
       <workItem from="1758370384238" duration="7152000" />
       <workItem from="1758417950221" duration="590000" />
       <workItem from="1758418878957" duration="2496000" />
-      <workItem from="1758422049188" duration="10004000" />
+      <workItem from="1758422049188" duration="12159000" />
     </task>
     <servers />
   </component>

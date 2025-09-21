@@ -17,6 +17,7 @@ void AACPlayerController::SetupInputComponent()
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SetupInputComponent - Mapping Context = %s"), *GetNameSafe(InputMappingContext));
+		bShowMouseCursor = true;          // makes the cursor visible
 
 		Subsystem->AddMappingContext(InputMappingContext, 0);
 	}

@@ -13,5 +13,9 @@ UCLASS()
 class MYPROJECT_API AACGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	;
 };
+
+
+

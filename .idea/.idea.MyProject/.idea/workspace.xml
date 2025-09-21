@@ -14,13 +14,7 @@
   <component name="ChangeListManager">
     <list default="true" id="5a07fc42-cb42-4b2d-902e-e2d41c10287f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MyProject/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MyProject/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Main/Aircraft/BPAPlayerAircraft.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Main/Aircraft/BPAPlayerAircraft.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/2/HX/P7LBMJDT1PVIR4DXLPFADZ.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/4/FI/1R83OWMJ9OPSY3TN2BBJKA.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Maps/Levels/Hills/8/MB/CB4Q7W4YWXOXMNEQG9QV4V.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/GameModes/ACGameModeBase.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/MyProject/Player/ACPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Player/ACPlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MyProject/Aircraft/FPVMovementComponent.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,21 +34,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "UnrealLinkOptionsId",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;UnrealLinkOptionsId&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="C/C++ Project.MyProject">
     <configuration name="MyProject" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
@@ -177,7 +171,8 @@
       <workItem from="1758370384238" duration="7152000" />
       <workItem from="1758417950221" duration="590000" />
       <workItem from="1758418878957" duration="2496000" />
-      <workItem from="1758422049188" duration="12159000" />
+      <workItem from="1758422049188" duration="12461000" />
+      <workItem from="1758449707966" duration="892000" />
     </task>
     <servers />
   </component>
